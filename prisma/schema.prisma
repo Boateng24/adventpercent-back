@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+
+model Song {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  artist    String
+  album     String?
+  genre     String
+  duration  Int?
+  lyrics    String?
+  viewCount Int      @default(0)
+  track     String
+  image     String?
+  playlist  Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId String  @db.ObjectId
+  trending  Trending[] 
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  password  String
+  username  String
+  firstname String?
+  lastname  String?
+  playlists Playlist[]
+  premium   Boolean  @default(false)
+  userType userType @default(user)
+}
+
+model Playlist {
+  id    String   @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String  @db.ObjectId
+  songs Song[]   
+}
+
+model Trending {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  song          Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId        String   @db.ObjectId
+  viewCount     Int
+  timestamp     DateTime
+}
+
+
+enum userType {
+  artist
+  user
+}
+
