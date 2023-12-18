@@ -11,6 +11,8 @@ import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './controllers/auth/auth.controller';
 import { AuthService } from './services/auth/auth.service';
+import { SongsService } from './services/songs/songs.service';
+import { SongsController } from './controllers/songs/songs.controller';
 
 @Module({
   imports: [
@@ -34,13 +36,14 @@ import { AuthService } from './services/auth/auth.service';
       },
     ]),
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, SongsController],
   providers: [
     AppService,
     DbconnectionService,
     { provide: APP_INTERCEPTOR, useClass: CacheInterceptor },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     AuthService,
+    SongsService,
   ],
 })
 export class AppModule implements NestModule {
