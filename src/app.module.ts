@@ -13,6 +13,9 @@ import { AuthController } from './controllers/auth/auth.controller';
 import { AuthService } from './services/auth/auth.service';
 import { SongsService } from './services/songs/songs.service';
 import { SongsController } from './controllers/songs/songs.controller';
+import { SeedService } from './services/seed/seed.service';
+import { CloudinaryService } from './config/cloudinary/cloudinary.service';
+import { QuartetSeedCommand } from './seed/seed-script';
 
 @Module({
   imports: [
@@ -44,6 +47,9 @@ import { SongsController } from './controllers/songs/songs.controller';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     AuthService,
     SongsService,
+    SeedService,
+    CloudinaryService,
+    QuartetSeedCommand,
   ],
 })
 export class AppModule implements NestModule {

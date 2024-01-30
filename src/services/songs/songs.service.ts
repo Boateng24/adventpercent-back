@@ -3,12 +3,33 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { songParams } from 'src/Dtos/songs.dto';
 import { DbPrismaService } from 'src/db-prisma/db-prisma.service';
+import { SongDto } from 'src/Dtos/songs.dto';
+import { getStartAndEndOfWeek } from 'src/helpers/weekrange';
 
 @Injectable()
 export class SongsService {
   constructor(private readonly prisma: DbPrismaService) {}
+
+  async createSong(song: SongDto) {
+    const { startDate, endDate } = getStartAndEndOfWeek();
+    const newSong = await this.prisma.song.create({
+      data: {
+        title: song.title,
+        track: song.track,
+        trending: {
+          create: {
+            id: song.trending?.songId,
+            viewCount: song.trending?.viewCount,
+            startDate: startDate,
+            endDate: endDate,
+          },
+        },
+      },
+      include: { trending: true },
+    });
+    return { song: newSong, message: 'Song created successfully' };
+  }
 
   async recommendedSongs() {
     try {
@@ -27,20 +48,97 @@ export class SongsService {
 
   async getSongById(songId: string) {
     try {
+      console.log('Fetching song with ID:', songId); // Log the ID
+
       const findSong = await this.prisma.song.findFirst({
-        where: {
-          id: songId,
-        },
+        where: { id: songId },
+        include: { trending: true },
       });
+
       if (!findSong) {
         throw new NotFoundException('Song does not exist');
       }
-      return { song: findSong, message: 'song fetched successfully' };
+
+      console.log('Found song, current viewCount:', findSong.viewCount); // Log current view count
+      console.log('Found song, current viewCount:', findSong.id); // Log current view count
+
+      const updatedSong = await this.prisma.song.update({
+        where: { id: findSong.id },
+        data: {
+          viewCount: { increment: 1 },
+        },
+        include: {
+          playlist: true,
+          trending: true,
+        },
+      });
+
+      if (findSong.trending && findSong.trending.length > 0) {
+        await Promise.all(
+          findSong.trending.map((trend) =>
+            this.prisma.trending.update({
+              where: { id: trend.id },
+              data: { viewCount: { increment: 1 } },
+            }),
+          ),
+        );
+      }
+
+      console.log('Updated song:', updatedSong.viewCount); // Log updated song details
+
+      return { song: updatedSong, message: 'Song fetched successfully' };
     } catch (error) {
       throw new InternalServerErrorException(
-        'An error occured fetching for song',
+        'An error occurred fetching for song',
         error.message,
       );
     }
   }
+
+  async getWeeklyTrendingSongs() {
+    const { startDate, endDate } = getStartAndEndOfWeek();
+
+    console.log('Start Date:', startDate); // Log start date
+    console.log('End Date:', endDate); // Log end date
+
+    const getTrending = await this.prisma.song.findMany({
+      where: {
+        AND: [
+          { viewCount: { gt: 0 } },
+          {
+            trending: {
+              some: {
+                startDate: { equals: startDate },
+                endDate: { equals: endDate },
+              },
+            },
+          },
+        ],
+      },
+      orderBy: {
+        viewCount: 'desc',
+      },
+      take: 10,
+      include: {
+        trending: true,
+      },
+    });
+
+    console.log('Trending Songs:', getTrending); // Log the fetched data
+
+    return { trendingSongs: getTrending, message: 'Trending songs fetched' };
+  }
+
+  // async updateAllSongs() {
+  //   const currentDate = new Date();
+  //   const firstDayoftheWeek = currentDate.getDate() - currentDate.getDay();
+  //   const lastDayoftheWeek = firstDayoftheWeek + 6;
+
+  //   const startDate = new Date(currentDate.setDate(firstDayoftheWeek));
+  //   const endDate = new Date(currentDate.setDate(lastDayoftheWeek));
+  //   const getTrending = await this.prisma.song.updateMany({
+
+  //   });
+  //   return { trendingSongs: getTrending, message: 'Trending songs fetched' };
+  // }
 }

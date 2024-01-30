@@ -19,7 +19,7 @@ model Song {
   genre     String?
   duration  Int?
   lyrics    String?
-  viewCount Int      @default(0)
+  viewCount Int  @default(0)  
   track     String
   image     String?
   playlist  Playlist? @relation(fields: [playlistId], references: [id], onDelete: Cascade)
@@ -49,10 +49,11 @@ model Playlist {
 
 model Trending {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  song          Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
-  songId        String   @db.ObjectId
-  viewCount     Int
-  timestamp     DateTime
+  song          Song?     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId        String?   @db.ObjectId
+  viewCount     Int? @default(0)
+  startDate     DateTime? 
+  endDate       DateTime?
 }
 
 

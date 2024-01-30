@@ -8,7 +8,4 @@ export class AppService {
   async onApplicationBootstrap() {
     await this.dbConnectionService.connection();
   }
-  getHello(): string {
-    return 'Hello World!';
-  }
 }
