@@ -31,9 +31,13 @@ export class SongsService {
     return { song: newSong, message: 'Song created successfully' };
   }
 
-  async recommendedSongs() {
+  async recommendedSongs(limit: number, skip: number) {
     try {
-      const recSongs = await this.prisma.song.findMany({});
+      const recSongs = await this.prisma.song.findMany({
+        take: limit,
+        skip: skip,
+      });
+      console.log(recSongs.length);
       return {
         recommended: recSongs,
         message: 'Recommended songs fetched successfully',
@@ -48,12 +52,16 @@ export class SongsService {
 
   async getSongById(songId: string) {
     try {
+      let trendingSongs;
       console.log('Fetching song with ID:', songId); // Log the ID
+      const { startDate, endDate } = getStartAndEndOfWeek();
 
       const findSong = await this.prisma.song.findFirst({
         where: { id: songId },
         include: { trending: true },
       });
+
+      console.log(findSong.id);
 
       if (!findSong) {
         throw new NotFoundException('Song does not exist');
@@ -62,31 +70,42 @@ export class SongsService {
       console.log('Found song, current viewCount:', findSong.viewCount); // Log current view count
       console.log('Found song, current viewCount:', findSong.id); // Log current view count
 
-      const updatedSong = await this.prisma.song.update({
-        where: { id: findSong.id },
-        data: {
-          viewCount: { increment: 1 },
-        },
-        include: {
-          playlist: true,
-          trending: true,
+      const existingTrending = await this.prisma.trending.findFirst({
+        where: {
+          songId: findSong.id,
         },
       });
 
-      if (findSong.trending && findSong.trending.length > 0) {
-        await Promise.all(
-          findSong.trending.map((trend) =>
-            this.prisma.trending.update({
-              where: { id: trend.id },
-              data: { viewCount: { increment: 1 } },
-            }),
-          ),
-        );
+      if (existingTrending) {
+        trendingSongs = await this.prisma.trending.update({
+          where: {
+            id: existingTrending.id,
+          },
+          data: {
+            viewCount: { increment: 1 },
+            startDate: startDate,
+            endDate: endDate,
+            song: {
+              connect: { id: findSong.id },
+            },
+          },
+        });
+      } else {
+        trendingSongs = await this.prisma.trending.create({
+          data: {
+            viewCount: 1,
+            startDate: startDate,
+            endDate: endDate,
+            song: {
+              connect: { id: findSong.id },
+            },
+          },
+        });
       }
 
-      console.log('Updated song:', updatedSong.viewCount); // Log updated song details
+      console.log('Updated song:', trendingSongs.viewCount); // Log updated song details
 
-      return { song: updatedSong, message: 'Song fetched successfully' };
+      return { song: trendingSongs, message: 'Song fetched successfully' };
     } catch (error) {
       throw new InternalServerErrorException(
         'An error occurred fetching for song',
@@ -119,9 +138,6 @@ export class SongsService {
         viewCount: 'desc',
       },
       take: 10,
-      include: {
-        trending: true,
-      },
     });
 
     console.log('Trending Songs:', getTrending); // Log the fetched data
