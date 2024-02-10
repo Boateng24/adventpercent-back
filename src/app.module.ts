@@ -16,6 +16,8 @@ import { SongsController } from './controllers/songs/songs.controller';
 import { SeedService } from './services/seed/seed.service';
 import { CloudinaryService } from './config/cloudinary/cloudinary.service';
 import { QuartetSeedCommand } from './seed/seed-script';
+import { TasksService } from './services/tasks/tasks.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -38,6 +40,7 @@ import { QuartetSeedCommand } from './seed/seed-script';
         limit: 10,
       },
     ]),
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController, AuthController, SongsController],
   providers: [
@@ -50,6 +53,7 @@ import { QuartetSeedCommand } from './seed/seed-script';
     SeedService,
     CloudinaryService,
     QuartetSeedCommand,
+    TasksService,
   ],
 })
 export class AppModule implements NestModule {

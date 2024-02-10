@@ -8,7 +8,6 @@ import {
   Res,
   HttpStatus,
 } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { SongDto } from 'src/Dtos/songs.dto';
 import { SongsService } from 'src/services/songs/songs.service';
 
@@ -43,13 +42,7 @@ export class SongsController {
     return await this.Songservice.getSongById(id);
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async trendingCron() {
-    return await this.Songservice.getWeeklyTrendingSongs();
-  }
-
   @Get('/trendings')
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async getTrendingSongs() {
     return await this.Songservice.getWeeklyTrendingSongs();
   }
