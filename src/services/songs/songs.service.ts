@@ -52,16 +52,12 @@ export class SongsService {
 
   async getSongById(songId: string) {
     try {
-      let trendingSongs;
-      console.log('Fetching song with ID:', songId); // Log the ID
       const { startDate, endDate } = getStartAndEndOfWeek();
 
       const findSong = await this.prisma.song.findFirst({
         where: { id: songId },
         include: { trending: true },
       });
-
-      console.log(findSong);
 
       if (!findSong) {
         throw new NotFoundException('Song does not exist');
@@ -73,7 +69,7 @@ export class SongsService {
       });
 
       if (existingTrending) {
-        trendingSongs = await this.prisma.trending.update({
+        await this.prisma.trending.update({
           where: {
             id: existingTrending.id,
           },
@@ -87,7 +83,7 @@ export class SongsService {
           },
         });
       } else {
-        trendingSongs = await this.prisma.trending.create({
+        await this.prisma.trending.create({
           data: {
             viewCount: 1,
             startDate: startDate,
