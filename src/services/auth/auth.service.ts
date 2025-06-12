@@ -8,7 +8,7 @@ import {
 import { DbPrismaService } from 'src/db-prisma/db-prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { UserDto, LoginDto } from 'src/Dtos/users.dto';
+import { UserDto, LoginDto, socialDto } from 'src/Dtos/users.dto';
 
 @Injectable()
 export class AuthService {
@@ -84,6 +84,45 @@ export class AuthService {
     } catch (error) {
       throw new InternalServerErrorException(
         'An error occured while logging in a user',
+        error.message,
+      );
+    }
+  }
+
+  async loginWithSocial({ email, provider, providerId }: socialDto) {
+    try {
+      let user = await this.prisma.user.findFirst({
+        where: {
+          email,
+        },
+      });
+
+      // If the user does not exist, create a new one
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: {
+            email,
+            username: email.split('@')[0], // Set a default username, or handle it according to your needs
+            provider, // Store which provider is used (Google/Facebook)
+            providerId, // Store the provider's unique ID (Google/Facebook uid)
+            password: '',
+          },
+        });
+      }
+
+      // Generate JWT token
+      const payload = { id: user.id, role: user.userType };
+      const userToken = await this.jwtservice.signAsync(payload);
+
+      return {
+        userId: user.id,
+        loggedInUser: user.username,
+        accessToken: userToken,
+        userRole: user.userType,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'An error occurred while logging in with social provider',
         error.message,
       );
     }

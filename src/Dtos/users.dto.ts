@@ -45,3 +45,15 @@ export class LoginDto {
   @IsNotEmpty({ message: 'Username is required' })
   password: string;
 }
+
+export class socialDto {
+  @IsString()
+  provider: string;
+
+  @IsString()
+  providerId: string;
+
+  @IsString()
+  @IsEmail()
+  email: string;
+}
