@@ -6,11 +6,26 @@ import { SongsService } from '../songs/songs.service';
 export class TasksService {
   constructor(private readonly songService: SongsService) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleCron() {
-    // Logic to update trending songs
-    const trendingSongs = await this.songService.getWeeklyTrendingSongs();
-    // Potentially update a cache or a database with the trending songs
-    console.log('Trending songs updated at midnight:', trendingSongs);
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, {
+    name: 'daily-trending-update',
+    disabled: process.env.NODE_ENV == 'development', // Disable in dev
+  })
+  async handleDailyTrendingUpdate() {
+    try {
+      const results = await this.songService.calculateTrendingScores();
+      console.log(`Updated ${results.length} trending songs at ${new Date()}`);
+    } catch (error) {
+      console.error('Error updating trending scores:', error);
+    }
+  }
+
+  // Development job (runs every 10 minutes)
+  @Cron('*/10 * * * *', {
+    name: 'dev-trending-update',
+    disabled: process.env.NODE_ENV !== 'development', // Only in dev
+  })
+  async handleDevTrendingUpdate() {
+    console.log('[DEV] Running trending update...');
+    await this.songService.calculateTrendingScores();
   }
 }
