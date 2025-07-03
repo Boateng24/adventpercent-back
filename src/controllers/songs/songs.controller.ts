@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { SongDto } from 'src/Dtos/songs.dto';
 import { SongsService } from 'src/services/songs/songs.service';
+import { BadRequestException } from '@nestjs/common';
 
 @Controller('songs')
 export class SongsController {
@@ -33,7 +34,7 @@ export class SongsController {
     size = size || defaultSize;
     const limit = parseInt(size as any, 20);
     const skip = (page - 1) * limit;
-    const songs = await this.Songservice.recommendedSongs(limit, skip);
+    const songs = await this.Songservice.allSongs(limit, skip);
     return response.status(HttpStatus.OK).json({ page, limit, data: songs });
   }
 
@@ -42,8 +43,28 @@ export class SongsController {
     return await this.Songservice.getSongById(id);
   }
 
-  @Get('/trendings')
-  async getTrendingSongs() {
-    return await this.Songservice.getWeeklyTrendingSongs();
+  @Post('/interaction')
+  async recordInteraction(@Body() body: { songId: string; type: string }) {
+    const validTypes = ['play', 'skip', 'share', 'favorite', 'playlistAdd'];
+    if (!validTypes.includes(body.type)) {
+      throw new BadRequestException('Invalid interaction type');
+    }
+
+    await this.Songservice.recordInteraction(body.songId, body.type as any);
+    return { success: true };
+  }
+
+  @Get('/trending')
+  async getTrendingSongs(@Query('limit') limit: number) {
+    return await this.Songservice.getWeeklyTrendingSongs(limit);
+  }
+
+  @Get('/search')
+  async searchSongs(@Query('q') query: string) {
+    if (!query || query.length < 2) {
+      return [];
+    }
+
+    return this.Songservice.searchSongs(query);
   }
 }

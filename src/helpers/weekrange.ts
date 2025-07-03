@@ -14,3 +14,13 @@ export const getStartAndEndOfWeek = (date = new Date()) => {
 
   return { startDate: firstDayOfWeek, endDate: lastDayOfWeek };
 };
+
+export const getCurrentWeek = () => {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const pastDays = (now.getTime() - startOfYear.getTime()) / 86400000;
+  return {
+    weekNumber: Math.ceil((pastDays + startOfYear.getDay() + 1) / 7),
+    year: now.getFullYear(),
+  };
+};

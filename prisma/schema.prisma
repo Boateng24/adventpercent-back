@@ -12,19 +12,26 @@ datasource db {
 
 
 model Song {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  title     String?
-  artist    String?
-  album     String?
-  genre     String?
-  duration  Int?
-  lyrics    String?
-  viewCount Int  @default(0)  
-  track     String
-  image     String?
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  artist      String
+  album       String?
+  genre       String?
+  duration    Int?
+  lyrics      String?
+  // New engagement metrics
+  playCount   Int       @default(0)
+  skipCount   Int       @default(0)
+  completeRate Float     @default(0)
+  shares      Int       @default(0)
+  favorites   Int       @default(0)
+  playlistAdds Int      @default(0)
+  track       String
+  image       String?
   playlist  Playlist? @relation(fields: [playlistId], references: [id], onDelete: Cascade)
-  playlistId String?  @db.ObjectId
-  trending  Trending[] 
+  playlistId String? @db.ObjectId
+  trending    Trending[]
+  createdAt   DateTime?  @default(now())
 }
 
 model User {
@@ -51,12 +58,24 @@ model Playlist {
 
 model Trending {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  song          Song?     @relation(fields: [songId], references: [id], onDelete: Cascade)
-  songId        String?   @db.ObjectId
-  viewCount     Int? @default(0)
-  startDate     DateTime? 
-  endDate       DateTime?
+  song          Song     @relation(fields: [songId], references: [id])
+  songId        String   @db.ObjectId
+  // New metrics
+  dailyPlays    Int      @default(0)
+  playVelocity  Float    @default(0)
+  skipRate      Float    @default(0)
+  shares        Int      @default(0)
+  // Time tracking
+  weekNumber    Int?
+  year          Int?
+  lastUpdated   DateTime @default(now())
+  rank          Int?
+  
+  @@unique([songId, weekNumber, year])
+  @@index([weekNumber, year])
+  @@index([playVelocity])
 }
+
 
 
 enum userType {
