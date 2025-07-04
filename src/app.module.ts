@@ -18,6 +18,8 @@ import { CloudinaryService } from './config/cloudinary/cloudinary.service';
 import { QuartetSeedCommand } from './seed/seed-script';
 import { TasksService } from './services/tasks/tasks.service';
 import { ScheduleModule } from '@nestjs/schedule';
+import { UploadsongsService } from './services/uploadsongs/uploadsongs.service';
+import { UploadsongsController } from './controllers/uploadsongs/uploadsongs.controller';
 
 @Module({
   imports: [
@@ -42,7 +44,12 @@ import { ScheduleModule } from '@nestjs/schedule';
     ]),
     ScheduleModule.forRoot(),
   ],
-  controllers: [AppController, AuthController, SongsController],
+  controllers: [
+    AppController,
+    AuthController,
+    SongsController,
+    UploadsongsController,
+  ],
   providers: [
     AppService,
     DbconnectionService,
@@ -54,6 +61,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CloudinaryService,
     QuartetSeedCommand,
     TasksService,
+    UploadsongsService,
   ],
 })
 export class AppModule implements NestModule {

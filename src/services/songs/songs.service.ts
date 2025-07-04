@@ -175,7 +175,7 @@ export class SongsService {
     return sortedSongs;
   }
 
-  async getWeeklyTrendingSongs(limit = 20) {
+  async getWeeklyTrendingSongs(limit: number) {
     const { weekNumber, year } = getCurrentWeek();
     const trending = await this.prisma.trending.findMany({
       where: {
@@ -185,6 +185,7 @@ export class SongsService {
       },
       orderBy: { rank: 'asc' },
       include: { song: true },
+      take: limit,
     });
     return { trendingSongs: trending, message: 'Trending songs fetched' };
   }

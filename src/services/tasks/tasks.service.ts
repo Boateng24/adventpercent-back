@@ -20,7 +20,7 @@ export class TasksService {
   }
 
   // Development job (runs every 10 minutes)
-  @Cron('*/10 * * * *', {
+  @Cron('*/20 * * * *', {
     name: 'dev-trending-update',
     disabled: process.env.NODE_ENV !== 'development', // Only in dev
   })
