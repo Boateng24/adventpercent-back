@@ -8,7 +8,7 @@ import {
   Get,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { UploadsongsService } from 'src/services/uploadsongs/uploadsongs.service';
+import { UploadsongsService } from 'src/uploadsongs/uploadsongs.service';
 
 @Controller('uploadsongs')
 export class UploadsongsController {

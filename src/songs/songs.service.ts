@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  HttpException,
 } from '@nestjs/common';
 import { DbPrismaService } from 'src/db-prisma/db-prisma.service';
 import { SongDto } from 'src/Dtos/songs.dto';
@@ -35,20 +36,19 @@ export class SongsService {
   async allSongs(limit: number, skip: number) {
     try {
       const getSongs = await this.prisma.song.findMany({
+        where: { status: 'APPROVED' as any },
         take: limit,
         skip: skip,
-        orderBy: {
-          createdAt: 'desc',
-        },
+        orderBy: { createdAt: 'desc' },
       });
       return {
         recommended: getSongs,
         message: 'Recommended songs fetched successfully',
       };
     } catch (error) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException(
-        'An error occured while fetching recommended songs',
-        error.message,
+        'An error occurred while fetching recommended songs',
       );
     }
   }
@@ -66,7 +66,6 @@ export class SongsService {
         playCount: type === 'play' ? { increment: 1 } : undefined,
         skipCount: type === 'skip' ? { increment: 1 } : undefined,
         shares: type === 'share' ? { increment: 1 } : undefined,
-        favorites: type === 'favorite' ? { increment: 1 } : undefined,
         playlistAdds: type === 'playlistAdd' ? { increment: 1 } : undefined,
       },
     });
@@ -102,25 +101,23 @@ export class SongsService {
         include: { trending: true },
       });
 
-      if (!song) {
+      if (!song || (song as any).status !== 'APPROVED') {
         throw new NotFoundException('Song not found');
       }
 
       await this.recordInteraction(songId, 'play');
       return { song, message: 'Song fetched successfully' };
     } catch (error) {
-      throw new InternalServerErrorException(
-        'Error fetching song',
-        error.message,
-      );
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException('Error fetching song');
     }
   }
 
   async calculateTrendingScores() {
     const { weekNumber, year } = getCurrentWeek();
 
-    const activeSongs = await this.prisma.trending.findMany({
-      where: { weekNumber, year },
+    const activeSongs: any[] = await (this.prisma.trending as any).findMany({
+      where: { weekNumber, year, song: { status: 'APPROVED' } },
       include: { song: true },
     });
 
@@ -177,11 +174,12 @@ export class SongsService {
 
   async getWeeklyTrendingSongs(limit: number) {
     const { weekNumber, year } = getCurrentWeek();
-    const trending = await this.prisma.trending.findMany({
+    const trending: any[] = await (this.prisma.trending as any).findMany({
       where: {
         weekNumber,
         year,
         rank: { lte: limit },
+        song: { status: 'APPROVED' },
       },
       orderBy: { rank: 'asc' },
       include: { song: true },
@@ -190,9 +188,20 @@ export class SongsService {
     return { trendingSongs: trending, message: 'Trending songs fetched' };
   }
 
-  async searchSongs(query: string) {
-    return this.prisma.song.findMany({
+  async getSongsByGenre(genre: string) {
+    return (this.prisma.song as any).findMany({
       where: {
+        status: 'APPROVED',
+        genre: { equals: genre, mode: 'insensitive' },
+      },
+      orderBy: { playCount: 'desc' },
+    });
+  }
+
+  async searchSongs(query: string) {
+    return (this.prisma.song as any).findMany({
+      where: {
+        status: 'APPROVED',
         OR: [
           { title: { contains: query, mode: 'insensitive' } },
           { artist: { contains: query, mode: 'insensitive' } },
@@ -201,9 +210,7 @@ export class SongsService {
         ],
       },
       take: 10,
-      orderBy: {
-        playCount: 'desc', // Prioritize popular songs
-      },
+      orderBy: { playCount: 'desc' },
     });
   }
 }

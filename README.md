@@ -71,3 +71,40 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+## API Endpoints
+
+### Playlists
+
+- `POST /playlists` - Create a new playlist.
+  - Body: `{ "name": "My Awesome Playlist" }`
+- `POST /playlists/:playlistId/songs` - Add a song to a playlist.
+  - Body: `{ "songId": "song-id" }`
+- `GET /playlists` - Get all playlists for the authenticated user.
+
+### Favorites
+
+- `POST /favorites` - Add a song to favorites.
+  - Body: `{ "songId": "song-id" }`
+- `DELETE /favorites/:songId` - Remove a song from favorites.
+- `GET /favorites` - Get all favorite songs for the authenticated user.
+
+### Users
+
+- `GET /users/profile` - Get the profile of the authenticated user.
+- `PUT /users/profile` - Update the profile of the authenticated user.
+  - Body: `{ "firstname": "John", "lastname": "Doe" }`
+
+### Songs
+
+- `GET /songs/search?q=<query>` - Search for songs by title, artist, genre, or album.
+- `POST /songs/interaction` - Record a song interaction (play, skip, share).
+- `GET /songs/trending` - Get trending songs.
+- `GET /songs/recommended` - Get recommended songs.
+- `GET /songs/song/:id` - Get a specific song by its ID.
+
+### Recently Played
+
+- `POST /recently-played` - Add a song to the recently played list.
+  - Body: `{ "songId": "song-id" }`
+- `GET /recently-played` - Get the recently played songs for the authenticated user.

@@ -17,9 +17,13 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new PrismaErrorFilter());
+  const allowedOrigins = configService.get<string>('ALLOWED_ORIGINS');
   app.enableCors({
-    origin: '*',
+    origin: allowedOrigins
+      ? allowedOrigins.split(',')
+      : 'http://localhost:3000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
   });
   const PORT = configService.get<number>('PORT') || 3000;
   await app.listen(PORT);

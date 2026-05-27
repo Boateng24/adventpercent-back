@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { SongsService } from '../songs/songs.service';
+import { SongsService } from 'src/songs/songs.service';
 
 @Injectable()
 export class TasksService {
@@ -20,7 +20,7 @@ export class TasksService {
   }
 
   // Development job (runs every 10 minutes)
-  @Cron('*/20 * * * *', {
+  @Cron('*/10 * * * *', {
     name: 'dev-trending-update',
     disabled: process.env.NODE_ENV !== 'development', // Only in dev
   })

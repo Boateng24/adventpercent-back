@@ -1,8 +1,6 @@
-import { Type } from 'class-transformer';
 import {
   IsString,
   IsOptional,
-  ValidateNested,
   IsNumber,
   IsDateString,
 } from 'class-validator';
@@ -15,12 +13,14 @@ export class TrendingDto {
   @IsString()
   @IsOptional()
   songId?: string;
-  @IsString()
   @IsNumber()
+  @IsOptional()
   viewCount?: number;
   @IsDateString()
+  @IsOptional()
   startDate?: string;
   @IsDateString()
+  @IsOptional()
   endDate?: string;
 }
 
@@ -34,17 +34,16 @@ export class SongDto {
   @IsString()
   @IsOptional()
   album?: string;
-
   @IsString()
   @IsOptional()
   genre?: string;
-  @IsString()
+  @IsNumber()
   @IsOptional()
   duration?: number;
   @IsString()
   @IsOptional()
   lyrics?: string;
-  @IsString()
+  @IsNumber()
   @IsOptional()
   viewCount?: number;
   @IsString()
@@ -52,9 +51,4 @@ export class SongDto {
   @IsString()
   @IsOptional()
   image?: string;
-  playlistId: string;
-  @ValidateNested()
-  @Type(() => TrendingDto)
-  trending: TrendingDto;
-  trendingId: string;
 }

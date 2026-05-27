@@ -27,23 +27,30 @@ export class UserDto {
   @IsNotEmpty({ message: 'Email is required' })
   email: string;
   @IsOptional()
-  userType: userType;
-}
-
-enum userType {
-  artist = 'artist',
-  user = 'user',
+  @IsString()
+  userType?: string;
 }
 
 export class LoginDto {
-  @IsString()
   @IsEmail()
-  @IsNotEmpty({ message: 'Password is required' })
+  @IsNotEmpty({ message: 'Email is required' })
   email: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'Username is required' })
+  @IsNotEmpty({ message: 'Password is required' })
   password: string;
+}
+
+export class UsersDto {
+  @IsString()
+  @IsOptional()
+  username?: string;
+  @IsString()
+  @IsOptional()
+  firstname?: string;
+  @IsString()
+  @IsOptional()
+  lastname?: string;
 }
 
 export class socialDto {
@@ -53,7 +60,27 @@ export class socialDto {
   @IsString()
   providerId: string;
 
-  @IsString()
   @IsEmail()
   email: string;
+}
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  @IsNotEmpty({ message: 'Email is required' })
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Reset token is required' })
+  token: string;
+
+  @IsString()
+  @MinLength(6)
+  @IsNotEmpty({ message: 'New password is required' })
+  newPassword: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Please confirm your new password' })
+  confirmPassword: string;
 }
