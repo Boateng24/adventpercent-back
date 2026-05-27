@@ -9,17 +9,25 @@ import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
 import { JwtModule } from '@nestjs/jwt';
-import { AuthController } from './controllers/auth/auth.controller';
-import { AuthService } from './services/auth/auth.service';
-import { SongsService } from './services/songs/songs.service';
-import { SongsController } from './controllers/songs/songs.controller';
-import { SeedService } from './services/seed/seed.service';
+import { PassportModule } from '@nestjs/passport';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { JwtStrategy } from './auth/jwt.strategy';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
+import { SongsService } from './songs/songs.service';
+import { SongsController } from './songs/songs.controller';
+import { SeedService } from './seed/seed.service';
 import { CloudinaryService } from './config/cloudinary/cloudinary.service';
 import { QuartetSeedCommand } from './seed/seed-script';
-import { TasksService } from './services/tasks/tasks.service';
+import { TasksService } from './tasks/tasks.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import { UploadsongsService } from './services/uploadsongs/uploadsongs.service';
-import { UploadsongsController } from './controllers/uploadsongs/uploadsongs.controller';
+import { UploadsongsService } from './uploadsongs/uploadsongs.service';
+import { UploadsongsController } from './uploadsongs/uploadsongs.controller';
+import { PlaylistsModule } from './playlists/playlists.module';
+import { FavoritesModule } from './favorites/favorites.module';
+import { UsersModule } from './users/users.module';
+import { RecentlyPlayedModule } from './recently-played/recently-played.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -36,6 +44,27 @@ import { UploadsongsController } from './controllers/uploadsongs/uploadsongs.con
     CacheModule.register({
       isGlobal: true,
     }),
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        transport: {
+          host: configService.get<string>('MAIL_HOST'),
+          port: parseInt(configService.get<string>('MAIL_PORT') ?? '587', 10),
+          secure: configService.get<string>('MAIL_SECURE') === 'true',
+          auth: {
+            user: configService.get<string>('MAIL_USER'),
+            pass: configService.get<string>('MAIL_PASS'),
+          },
+        },
+        defaults: {
+          from: `"AdventPercent" <${
+            configService.get<string>('MAIL_FROM') ??
+            'noreply@adventpercent.com'
+          }>`,
+        },
+      }),
+      inject: [ConfigService],
+    }),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
@@ -43,6 +72,12 @@ import { UploadsongsController } from './controllers/uploadsongs/uploadsongs.con
       },
     ]),
     ScheduleModule.forRoot(),
+    PassportModule,
+    PlaylistsModule,
+    FavoritesModule,
+    UsersModule,
+    RecentlyPlayedModule,
+    AdminModule,
   ],
   controllers: [
     AppController,
@@ -62,6 +97,7 @@ import { UploadsongsController } from './controllers/uploadsongs/uploadsongs.con
     QuartetSeedCommand,
     TasksService,
     UploadsongsService,
+    JwtStrategy,
   ],
 })
 export class AppModule implements NestModule {

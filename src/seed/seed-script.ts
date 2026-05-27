@@ -1,6 +1,6 @@
 import { Command, CommandRunner } from 'nest-commander';
 import { Injectable } from '@nestjs/common';
-import { SeedService } from 'src/services/seed/seed.service'; // Adjust the path as needed
+import { SeedService } from 'src/seed/seed.service';
 
 @Command({ name: 'seed-quartet', description: 'Seed quartet songs' })
 @Injectable()
