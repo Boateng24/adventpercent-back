@@ -1,6 +1,7 @@
-// uploads-songs.service.ts
+/// <reference types="multer" />
 import { Injectable } from '@nestjs/common';
 import { DbPrismaService } from 'src/db-prisma/db-prisma.service';
+import { WhisperService } from 'src/whisper/whisper.service';
 import { UploadSongDto } from 'src/Dtos/uploadsongs.dto';
 import { v2 as cloudinary } from 'cloudinary';
 import * as streamifier from 'streamifier';
@@ -8,7 +9,10 @@ import { validate } from 'class-validator';
 
 @Injectable()
 export class UploadsongsService {
-  constructor(private readonly prisma: DbPrismaService) {
+  constructor(
+    private readonly prisma: DbPrismaService,
+    private readonly whisperService: WhisperService,
+  ) {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
@@ -43,8 +47,9 @@ export class UploadsongsService {
       artist: string;
       album?: string;
       genre?: string;
-      audioFilename: string; // For file matching
-      imageFilename?: string; // For file matching
+      lyrics?: string;
+      audioFilename: string;
+      imageFilename?: string;
     }>,
   ) {
     // 1. Validate metadata structure
@@ -67,9 +72,24 @@ export class UploadsongsService {
           data: songDto,
         });
 
+        // 7. Auto-generate LRC lyrics if none were provided (runs in background)
+        if (!songDto.lyrics) {
+          this.whisperService.scheduleTranscription(
+            createdSong.id,
+            createdSong.track,
+            createdSong.title,
+            (lrc) =>
+              (this.prisma.song as any).update({
+                where: { id: createdSong.id },
+                data: { lyrics: lrc },
+              }),
+          );
+        }
+
         return { success: true, data: createdSong };
       } catch (error) {
-        return { success: false, error: error.message };
+        const message = error instanceof Error ? error.message : 'Upload error';
+        return { success: false, error: message };
       }
     });
 
@@ -96,17 +116,16 @@ export class UploadsongsService {
       artist: string;
       album?: string;
       genre?: string;
+      lyrics?: string;
       audioFilename: string;
       imageFilename?: string;
     },
     audioFiles: Map<string, Express.Multer.File>,
     imageFiles: Map<string, Express.Multer.File>,
   ): Promise<UploadSongDto> {
-    // 1. Find and upload audio
     const audioFile = this.findAudioFile(meta.audioFilename, audioFiles);
     const trackUrl = await this.uploadWithRetry(audioFile, 'audio');
 
-    // 2. Handle image if specified
     let imageUrl: string | undefined;
     if (meta.imageFilename) {
       const imageFile = this.findImageFile(meta.imageFilename, imageFiles);
@@ -115,14 +134,14 @@ export class UploadsongsService {
       }
     }
 
-    // 3. Return DTO
     return {
       title: meta.title,
       artist: meta.artist,
       album: meta.album,
       genre: meta.genre,
-      track: trackUrl, // Cloudinary URL
-      image: imageUrl, // Cloudinary URL (optional)
+      lyrics: meta.lyrics,
+      track: trackUrl,
+      image: imageUrl,
     };
   }
 
@@ -203,27 +222,9 @@ export class UploadsongsService {
         ); // Exponential backoff
         return this.uploadWithRetry(file, type, retries - 1);
       }
-      throw new Error(
-        `Failed to upload ${type} after 3 attempts: ${error.message}`,
-      );
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to upload ${type} after 3 attempts: ${message}`);
     }
-  }
-
-  private async createSongRecord(
-    meta: { title: string; artist: string; album?: string; genre?: string },
-    trackUrl: string,
-    imageUrl?: string,
-  ) {
-    return this.prisma.song.create({
-      data: {
-        title: meta.title,
-        artist: meta.artist,
-        album: meta.album,
-        genre: meta.genre,
-        track: trackUrl,
-        image: imageUrl,
-      },
-    });
   }
 
   async getAllSongs() {

@@ -87,7 +87,7 @@ export class SongsController {
 
   // @UseGuards(AuthGuard('jwt')) // TODO: re-enable before production
   @Get('/favorites')
-  async getFavorites(@Req() req, @Query('userId') userId: string) {
+  async getFavorites(@Req() req: any, @Query('userId') userId: string) {
     const id = req.user?.id ?? userId;
     const favorites = await this.favoritesService.getUserFavorites(id);
     return { favorites: favorites.map((f) => f.song) };
@@ -95,7 +95,7 @@ export class SongsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/favorites/:id')
-  async addToFavorites(@Req() req, @Param('id') songId: string) {
+  async addToFavorites(@Req() req: any, @Param('id') songId: string) {
     const userId = req.user.id;
     await this.favoritesService.addFavorite(userId, songId);
     return { message: 'Song added to favorites' };
@@ -103,7 +103,7 @@ export class SongsController {
 
   @UseGuards(AuthGuard('jwt'))
   @Delete('/favorites/:id')
-  async removeFromFavorites(@Req() req, @Param('id') songId: string) {
+  async removeFromFavorites(@Req() req: any, @Param('id') songId: string) {
     const userId = req.user.id;
     await this.favoritesService.removeFavorite(userId, songId);
     return { message: 'Song removed from favorites' };
@@ -111,7 +111,7 @@ export class SongsController {
 
   // @UseGuards(AuthGuard('jwt')) // TODO: re-enable before production
   @Get('/playlists')
-  async getPlaylists(@Req() req, @Query('userId') userId: string) {
+  async getPlaylists(@Req() req: any, @Query('userId') userId: string) {
     const id = req.user?.id ?? userId;
     const playlists = await this.playlistsService.getUserPlaylists(id);
     return { playlists };
@@ -119,7 +119,7 @@ export class SongsController {
 
   // @UseGuards(AuthGuard('jwt')) // TODO: re-enable before production
   @Get('/recently-played')
-  async getRecentlyPlayed(@Req() req, @Query('userId') userId: string) {
+  async getRecentlyPlayed(@Req() req: any, @Query('userId') userId: string) {
     const id = req.user?.id ?? userId;
     const history = await this.recentlyPlayedService.getRecentlyPlayed(id);
     return { songs: history.map((r) => r.song) };

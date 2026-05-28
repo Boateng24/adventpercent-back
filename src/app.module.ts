@@ -23,6 +23,7 @@ import { TasksService } from './tasks/tasks.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { UploadsongsService } from './uploadsongs/uploadsongs.service';
 import { UploadsongsController } from './uploadsongs/uploadsongs.controller';
+import { WhisperService } from './whisper/whisper.service'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { PlaylistsModule } from './playlists/playlists.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { UsersModule } from './users/users.module';
@@ -97,6 +98,7 @@ import { AdminModule } from './admin/admin.module';
     QuartetSeedCommand,
     TasksService,
     UploadsongsService,
+    WhisperService,
     JwtStrategy,
   ],
 })

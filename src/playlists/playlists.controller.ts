@@ -4,43 +4,49 @@ import {
   Body,
   Param,
   Get,
-  UseGuards,
+  // UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { PlaylistsService } from 'src/playlists/playlists.service';
 import { CreatePlaylistDto, AddSongToPlaylistDto } from 'src/Dtos/playlist.dto';
-import { AuthGuard } from '@nestjs/passport';
+// import { AuthGuard } from '@nestjs/passport';
 
 @Controller('playlists')
 export class PlaylistsController {
   constructor(private readonly playlistsService: PlaylistsService) {}
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt')) // TODO: re-enable before production
   @Post()
-  createPlaylist(@Req() req, @Body() createPlaylistDto: CreatePlaylistDto) {
-    const userId = req.user.id;
-    return this.playlistsService.createPlaylist(userId, createPlaylistDto);
+  createPlaylist(
+    @Req() req: any,
+    @Query('userId') userId: string,
+    @Body() createPlaylistDto: CreatePlaylistDto,
+  ) {
+    const id = req.user?.id ?? userId;
+    return this.playlistsService.createPlaylist(id, createPlaylistDto);
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt')) // TODO: re-enable before production
   @Post(':playlistId/songs')
   addSongToPlaylist(
-    @Req() req,
+    @Req() req: any,
+    @Query('userId') userId: string,
     @Param('playlistId') playlistId: string,
     @Body() addSongToPlaylistDto: AddSongToPlaylistDto,
   ) {
-    const userId = req.user.id;
+    const id = req.user?.id ?? userId;
     return this.playlistsService.addSongToPlaylist(
-      userId,
+      id,
       playlistId,
       addSongToPlaylistDto.songId,
     );
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt')) // TODO: re-enable before production
   @Get()
-  getUserPlaylists(@Req() req) {
-    const userId = req.user.id;
-    return this.playlistsService.getUserPlaylists(userId);
+  getUserPlaylists(@Req() req: any, @Query('userId') userId: string) {
+    const id = req.user?.id ?? userId;
+    return this.playlistsService.getUserPlaylists(id);
   }
 }

@@ -67,7 +67,9 @@ export class AuthService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      throw new InternalServerErrorException('An error occurred while creating a user');
+      throw new InternalServerErrorException(
+        'An error occurred while creating a user',
+      );
     }
   }
 
@@ -96,7 +98,9 @@ export class AuthService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      throw new InternalServerErrorException('An error occurred while logging in');
+      throw new InternalServerErrorException(
+        'An error occurred while logging in',
+      );
     }
   }
 
@@ -130,7 +134,9 @@ export class AuthService {
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
-      throw new InternalServerErrorException('An error occurred during social login');
+      throw new InternalServerErrorException(
+        'An error occurred during social login',
+      );
     }
   }
 
@@ -139,7 +145,9 @@ export class AuthService {
       const user = await this.prisma.user.findFirst({ where: { email } });
 
       if (!user) {
-        return { message: 'If that email is registered, you will receive a reset link' };
+        return {
+          message: 'If that email is registered, you will receive a reset link',
+        };
       }
 
       const resetToken = crypto.randomBytes(32).toString('hex');
@@ -165,7 +173,9 @@ export class AuthService {
         `,
       });
 
-      return { message: 'If that email is registered, you will receive a reset link' };
+      return {
+        message: 'If that email is registered, you will receive a reset link',
+      };
     } catch (error) {
       console.log('forgotPassword error:', error);
       if (error instanceof HttpException) throw error;
@@ -173,7 +183,11 @@ export class AuthService {
     }
   }
 
-  async resetPassword(token: string, newPassword: string, confirmPassword: string) {
+  async resetPassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) {
     try {
       if (newPassword !== confirmPassword) {
         throw new BadRequestException('Passwords do not match');
