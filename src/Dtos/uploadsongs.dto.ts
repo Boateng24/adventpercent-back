@@ -16,4 +16,7 @@ export class UploadSongDto {
   @IsString()
   @IsOptional()
   image?: string; // Cloudinary URL for cover image
+  @IsString()
+  @IsOptional()
+  lyrics?: string;
 }

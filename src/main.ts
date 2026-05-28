@@ -20,11 +20,13 @@ async function bootstrap() {
   const allowedOrigins = configService.get<string>('ALLOWED_ORIGINS');
   app.enableCors({
     origin: allowedOrigins
-      ? allowedOrigins.split(',')
-      : 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      ? allowedOrigins.split(',').map((o) => o.trim())
+      : ['http://localhost:3000'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
+
   const PORT = configService.get<number>('PORT') || 3000;
   await app.listen(PORT);
 }
